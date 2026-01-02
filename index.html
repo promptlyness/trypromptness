@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Promptly Manages AI Prompts for Text, Image, Video, Audio & Code.">
+	<meta name="theme-color" content="#38bdf8">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="msapplication-TileImage" content="icon192x192.png">
+    <link rel="manifest" href="manifest.json">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+	<link rel="apple-touch-icon" sizes="192x192" href="icon192x192.png">
+	<title>Promptness Trial</title>
+    <style>
+        :root {
+            --bg: #020617;
+            --panel: #020617;
+            --border: #1f2937;
+            --accent: #38bdf8;
+            --accent2: #a855f7;
+            --accent-soft: rgba(56,189,248,0.18);
+            --accent-glow: 0 0 16px rgba(56,189,248,0.55);
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --muted-dark: #6b7280;
+            --danger: #f87171;
+        }
+
+		.install-tip-wrap {
+		  width: 100%;
+		  text-align: center;
+		}
+		
+		.install-tip {
+		  margin-top: 0.25rem;
+		  font-size: 0.78rem;
+		  color: var(--muted);
+		  background: rgba(56,189,248,0.08);
+		  border-radius: 999px;
+		  padding: 0.25rem 0.6rem;
+		  display: inline-block;
+		}
+
+		/* Utility: hide in PWA display modes */
+		.hide-in-pwa {
+		  display: inline-block;
+		}
+
+		@media (display-mode: standalone), (display-mode: minimal-ui) {
+		  .hide-in-pwa {
+			display: none !important;
+		  }
+		}
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 1.25rem;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at top, rgba(56,189,248,0.16) 0%, transparent 50%), 
+                        radial-gradient(circle at bottom, rgba(168,85,247,0.10) 0%, #020617 55%);
+            color: var(--text);
+        }
+
+        .app {
+            max-width: 1120px;
+            margin: 0 auto;
+            background: radial-gradient(circle at top left, rgba(56,189,248,0.10), transparent 55%), 
+                        radial-gradient(circle at bottom right, rgba(168,85,247,0.10), transparent 55%), 
+                        var(--panel);
+            border-radius: 18px;
+            border: 1px solid rgba(56,189,248,0.6);
+            box-shadow: var(--accent-glow), 0 26px 60px rgba(0,0,0,0.78);
+            padding: 1.4rem 1.4rem 1.1rem;
+            position: relative;
+        }
+
+        .app::before, .app::after {
+            content: '';
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 26px;
+            border: 1px solid rgba(56,189,248,0.6);
+            pointer-events: none;
+            opacity: 0.35;
+        }
+
+        .app::before { top: -10px; left: -14px; border-color: rgba(56,189,248,0.75); box-shadow: 0 0 18px rgba(56,189,248,0.8); }
+        .app::after { bottom: -10px; right: -14px; border-color: rgba(168,85,247,0.75); box-shadow: 0 0 18px rgba(168,85,247,0.8); }
+
+        .app-header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; position: relative; z-index: 1; }
+        .app-title { flex: 1 1 auto; min-width: 220px; display: flex; align-items: flex-start; gap: 0.5rem; }
+        .app-title-main { flex: 1 1 auto; min-width: 0; }
+        .app-title-actions { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: flex-end; }
+
+        .app-title h1 { font-size: 1.45rem; margin: 0 0 0.2rem; }
+        .app-title p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+        .help-link {
+            font-size: 0.8rem; color: var(--accent); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.3rem; cursor: pointer; width: 32px; height: 32px; border-radius: 999px; background: rgba(15,23,42,0.9);
+            border: 1px solid rgba(56,189,248,0.9); box-shadow: 0 0 12px rgba(56,189,248,0.7);
+        }
+        .help-link span { font-size: 1rem; line-height: 1; }
+
+        .pro-bar {
+            margin: 0.1rem 0 0.55rem; border-radius: 12px; border: 1px solid rgba(56,189,248,0.6);
+            background: radial-gradient(circle at left, rgba(56,189,248,0.18), rgba(15,23,42,0.96)); padding: 0.5rem 0.8rem;
+			text-align: center;/* centers text inside */
+        }
+		
+        .pro-text { font-size: 0.78rem; color: var(--muted); max-width: 100%;}
+        .pro-highlight { color: #38bdf8; font-weight: 600; }
+
+        .tabs { margin-top: 0.2rem; position: relative; z-index: 5; }
+        .tabs-sticky {
+            position: sticky; top: 0; z-index: 10; background: linear-gradient(to bottom, rgba(2,6,23,0.98), rgba(2,6,23,0.95));
+            padding-top: 0.15rem; margin: 0 -1.0rem 0.5rem; padding-left: 1.0rem; padding-right: 1.0rem;
+        }
+        .tab-list {
+            display: flex; gap: 0.4rem; flex-wrap: wrap; border-bottom: 1px solid rgba(56,189,248,0.5);
+            padding-bottom: 0.4rem; margin-bottom: 0.4rem; justify-content: center;
+        }
+        .tab-btn {
+            border-radius: 999px; padding: 0.4rem 0.9rem; border: 1px solid rgba(148,163,184,0.5); background: rgba(15,23,42,0.9);
+            color: var(--muted); font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 0 8px rgba(15,23,42,0.9);
+            white-space: nowrap;
+        }
+        .tab-btn span.icon { font-size: 0.9rem; }
+        .tab-btn-active {
+            background: linear-gradient(135deg, rgba(56,189,248,0.26), rgba(168,85,247,0.26)); border-color: rgba(56,189,248,0.9);
+            color: var(--text); box-shadow: 0 0 16px rgba(56,189,248,0.6);
+        }
+        .tab-btn:hover:not(.tab-btn-active) { background: rgba(15,23,42,0.96); border-color: rgba(148,163,184,0.9); }
+
+        .tab-panels { margin-top: 0.4rem; }
+        .tab-panel { display: none; animation: fadeIn 0.18s ease-out; }
+        .tab-panel-active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        label { display: block; margin-bottom: 0.25rem; font-size: 0.8rem; color: var(--muted); }
+        .field-desc { font-size: 0.75rem; color: var(--muted-dark); margin-bottom: 0.3rem; }
+        .label-inline-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+        .label-inline-row label { margin: 0; }
+        .label-inline-row .field-desc { margin: 0; font-size: 0.76rem; }
+
+        input[type="text"], textarea, select {
+            width: 100%; border-radius: 9px; border: 1px solid rgba(30,64,175,0.6); background: rgba(15,23,42,0.92);
+            padding: 0.55rem 0.7rem; color: var(--text); font-size: 0.9rem; margin-bottom: 0.65rem; outline: none;
+            box-shadow: 0 0 10px rgba(15,23,42,0.9);
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent2); box-shadow: 0 0 0 1px rgba(168,85,247,0.45); }
+
+        textarea {
+			resize: none; 		/*none or vertical hide native grabber */
+			overflow: hidden;	/*hidden or auto prevent inner scrollbars */
+			min-height: 70px;
+		}
+		.row { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+        .row > div { flex: 1 1 180px; }
+
+        .button-row { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; margin-top: 0.4rem; }
+        .button-row-inline { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.2rem; }
+
+        button.primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #020617; border-radius: 999px; border: none;
+            padding: 0.5rem 1.3rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center;
+            gap: 0.35rem; box-shadow: 0 0 14px rgba(56,189,248,0.6); white-space: nowrap;
+        }
+        button.primary:active { transform: translateY(1px); }
+
+        .hint { font-size: 0.75rem; color: var(--muted-dark); text-align: center; }
+
+        .output-box {
+            margin-top: 0.75rem; border-radius: 10px; border: 1px solid rgba(56,189,248,0.7);
+            background: radial-gradient(circle at top, rgba(56,189,248,0.15), rgba(15,23,42,0.96)); padding: 0.9rem;
+            position: relative; box-shadow: 0 0 18px rgba(56,189,248,0.45);
+        }
+        .output-label {
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.4rem;
+            display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+        }
+        .output-textarea {
+            width: 100%; border: none; background: transparent; min-height: 120px; resize: vertical; color: var(--text);
+            font-family: Menlo, Monaco, Consolas, Liberation Mono, monospace; font-size: 0.83rem; outline: none; padding: 0;
+        }
+
+        .copy-btn {
+            font-size: 0.75rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.8); background: rgba(15,23,42,0.95);
+            padding: 0.25rem 0.75rem; color: var(--text); cursor: pointer; box-shadow: 0 0 10px rgba(15,23,42,0.95); white-space: nowrap;
+        }
+
+        .pill {
+            display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.9);
+            padding: 0.2rem 0.6rem; font-size: 0.75rem; color: var(--muted); background: rgba(15,23,42,0.92); white-space: nowrap;
+        }
+        .pill span.icon { font-size: 0.9rem; }
+
+        .footer { margin-top: 0.8rem; font-size: 0.72rem; color: var(--muted-dark); text-align: right; }
+
+        .collections-box {
+            margin-top: 0.75rem; border-radius: 12px; border: 1px solid rgba(148,163,184,0.7);
+            background: radial-gradient(circle at top, rgba(56,189,248,0.08), rgba(15,23,42,0.98)); padding: 0.7rem 0.7rem 0.6rem;
+            box-shadow: 0 0 16px rgba(15,23,42,0.95); font-size: 0.8rem;
+        }
+        .collections-header { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem; }
+        .collections-header h3 { margin: 0; font-size: 0.86rem; color: var(--text); letter-spacing: 0.12em; text-transform: uppercase; }
+
+        .collections-actions-row {
+            display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; align-items: center;
+        }
+        .collections-actions-row input { margin-bottom: 0; padding: 0.35rem 0.55rem; font-size: 0.78rem; flex: 1 1 200px; }
+        .collections-buttons-group { display: flex; flex-wrap: wrap; gap: 0.35rem; flex: 0 0 auto; }
+
+        .collections-btn {
+            font-size: 0.74rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.8); background: rgba(15,23,42,0.98);
+            color: var(--text); padding: 0.3rem 0.7rem; cursor: pointer; white-space: nowrap; flex: 0 0 auto;
+        }
+        .collections-btn-primary { border-color: rgba(56,189,248,0.9); color: #38bdf8; }
+
+        .collections-list {
+            max-height: 220px; overflow-y: auto; border-radius: 8px; border: 1px solid rgba(31,41,55,0.9);
+            background: rgba(15,23,42,0.98); padding: 0.35rem;
+        }
+        .collections-empty { font-size: 0.78rem; color: var(--muted-dark); padding: 0.25rem 0.2rem; }
+
+        .collection-item {
+            display: flex; align-items: center; justify-content: space-between; gap: 0.35rem; padding: 0.25rem 0.3rem;
+            border-radius: 6px; cursor: pointer; font-size: 0.78rem;
+        }
+        .collection-item:hover { background: rgba(15,23,42,0.9); }
+        .collection-main { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
+        .collection-title { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .collection-meta { font-size: 0.68rem; color: var(--muted-dark); }
+
+        .collection-buttons { display: flex; gap: 0.3rem; flex-shrink: 0; }
+        .collection-small-btn {
+            font-size: 0.68rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.7); background: rgba(15,23,42,0.98);
+            color: var(--muted); padding: 0.2rem 0.45rem; cursor: pointer; white-space: nowrap;
+        }
+        .collection-small-btn-danger { border-color: rgba(248,113,113,0.9); color: #fecaca; }
+
+        @media (max-width: 480px) {
+            .tab-list { justify-content: center; }
+            .tab-btn { padding: 0.35rem; }
+			.tab-btn span.icon { display: inline-block; }
+			.tab-btn span:not(.icon) {display: none; }	
+            .collections-actions-row { flex-direction: column; align-items: stretch; }
+            .collections-actions-row input { width: 100%; flex: 0 0 auto; }
+            .collections-buttons-group { width: 100%; justify-content: space-between; }
+            .collections-btn { flex: 1 1 auto; text-align: center; }
+        }
+
+        @media (max-width: 720px) {
+            body { padding: 0.7rem; }
+            .app { padding: 1rem 0.9rem 0.9rem; border-radius: 14px; }
+            .app-title h1 { font-size: 1.25rem; }
+            .button-row-inline { justify-content: flex-start; }
+        }
+
+        .help-overlay-backdrop {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.85); display: none; align-items: center; justify-content: center; z-index: 30;
+        }
+        .help-overlay-backdrop.active { display: flex; }
+        .help-overlay {
+            max-width: 720px; max-height: 90vh; width: 100%; border-radius: 14px; border: 1px solid rgba(56,189,248,0.7);
+            background: #020617; padding: 1rem 1.1rem; box-shadow: 0 20px 60px rgba(0,0,0,0.85), 0 0 20px rgba(56,189,248,0.55);
+            overflow: hidden; display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        .help-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+        .help-header h2 { font-size: 1rem; margin: 0; }
+        .help-close {
+            border-radius: 999px; border: 1px solid rgba(148,163,184,0.8); background: rgba(15,23,42,0.95); color: var(--muted);
+            font-size: 0.8rem; padding: 0.25rem 0.6rem; cursor: pointer;
+        }
+        .help-body { overflow-y: auto; padding-right: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+        .help-body h3 { font-size: 0.85rem; color: var(--text); margin: 0.5rem 0 0.2rem; }
+        .help-tag {
+            display: inline-block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .import-input {
+            display: none;
+        }
+
+		.auth-bar {
+		  margin-top: 0.4rem;
+		  margin-bottom: 0.6rem;
+		  padding: 0.35rem 0.7rem;
+		  border-radius: 999px;
+		  border: 1px solid rgba(56,189,248,0.45);
+		  background: radial-gradient(circle at left, rgba(56,189,248,0.16), rgba(15,23,42,0.96));
+		  display: flex;
+		  align-items: center;
+		  justify-content: center;      /* center everything horizontally */
+		  gap: 0.6rem;                  /* space between label and buttons */
+		  text-align: center;
+		  flex-wrap: wrap;
+		}
+
+		.auth-label {
+		  font-size: 0.8rem;
+		  color: var(--muted);
+		}
+
+		.auth-actions {
+		  display: flex;
+		  align-items: center;
+		  justify-content: center;      /* center buttons as a group */
+		  gap: 0.4rem;
+		  flex-wrap: wrap;
+		}
+
+		.auth-link-btn {
+		  font-size: 0.78rem;
+		  border-radius: 999px;
+		  border: 1px solid rgba(148,163,184,0.8);
+		  background: rgba(15,23,42,0.96);
+		  color: var(--accent);
+		  padding: 0.25rem 0.8rem;
+		  cursor: pointer;
+		  text-decoration: none;
+		  display: inline-flex;
+		  align-items: center;
+		  gap: 0.25rem;
+		  white-space: nowrap;
+		}
+		
+#fontSizeFloating {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2000;
+  display: inline-flex;
+  flex-direction: column;      /* vertical layout */
+  gap: 0.25rem;
+  align-items: center;
+
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  padding: 0.35rem 0.4rem;
+  border-radius: 999px;
+
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.label-inline-row {
+  position: relative;
+}
+
+#apiKeyMenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(15,23,42,0.95);
+  border: 1px solid rgba(56,189,248,0.4);
+  border-radius: 9px;
+  z-index: 10;
+}
+
+#apiKeyMenu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--text);
+  display: flex;
+  gap: 0.5rem;
+}
+    </style>
+</head>
+<body>
+<button id="fontSizeFloating" type="button" aria-label="Toggle larger text">
+  <span id="fontSizeLabel">a</span></button>
+    <div class="app">
+        <header class="app-header">
+            <div class="app-title">
+                <div class="app-title-main">
+					<div class="install-tip-wrap">
+					 <div class="install-tip hide-in-pwa">Click 'Install Promptness' in the address bar.</div>
+					</div>
+                </div>
+            </div>
+        </header>
+        <section class="tabs">
+            <div class="tabs-sticky" >		
+				<div class="auth-bar">
+				  <span class="auth-label"><strong>PROMPTNESS Trial</strong></span>
+				  <div class="auth-actions">
+					<a class="auth-link-btn" href="https://promptness.netlify.app/" target="_blank" rel="noopener">Pro Sign in</a>
+					<a class="auth-link-btn" href="https://promptlyness.gumroad.com/l/promptness" target="_blank" rel="noopener">Buy Pro</a>
+					
+					<a id="pwaReloadBtn" type="button" style="margin-left: 0.4rem; padding: 0.1rem 0.45rem; font-size: 0.7rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.8); background: rgba(15,23,42,0.95);
+				 color: var(--text); cursor: pointer;">&#x27F3;</a>
+					
+					
+				<!--	<button id="pwaReloadBtn" type="button" style="margin-left: 0.4rem; padding: 0.1rem 0.45rem; font-size: 0.7rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.8); background: rgba(15,23,42,0.95);
+				 color: var(--text); cursor: pointer;">&#x27F3;</button>
+				 -->
+				 
+				  </div>
+				</div>
+                    <p class="field-desc">Promptly Manages AI Prompts for Text, Image, Video, Audio & Code.</p>
+			<div class="pro-bar">
+				<div class="label-inline-row api-key-row" style="margin: 0.6rem 0 0.4rem 0;">
+                    <div class="label-inline-row">
+						<div class="label-inline-row api-key-row" style="margin: 0.6rem 0 0.4rem 0;">
+						
+						  <div class="label-inline-row">
+							<div style="position: relative; display: inline-block;">
+							  <label for="apiKey" style="font-size: 0.85rem; font-weight: 600; color: #38bdf8; cursor: pointer;" onclick="toggleApiKeyMenu()">🤖</label>
+							  <div id="apiKeyMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 0.35rem; padding: 0.4rem 0.6rem; background: rgba(15,23,42,0.98);
+								border: 1px solid rgba(56,189,248,0.6); border-radius: 10px; z-index: 20; max-width: 400px; width: 400px; white-space: normal; box-shadow: 0 8px 18px rgba(15,23,42,0.9);">
+								<ul style="margin: 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--text); display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem;">
+								  <li style="font-weight: 600; color:#38bdf8;">Supported:</li>
+								  <li>OpenAI</li>
+								</ul>
+								<ul style="margin: 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--text); display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem;">
+								  <li style="font-weight: 600; color:#38bdf8;">Upcoming:</li>
+								  <li>Perplexity,</li>
+								  <li>HuggingFace,</li>
+								  <li>Groq,</li>
+								  <li>Custom</li>
+								</ul>
+								<div style="margin-top: 0.35rem; font-size: 0.78rem; white-space: nowrap;">
+								  <a href="https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key" target="_blank" style="color: white; text-decoration: underline;">Where and how to get AI API keys?</a>
+								</div>
+							  </div>
+							</div>
+						  </div>
+						  
+						</div>
+                    </div>
+				  <div style="display: flex; gap: 0.5rem; align-items: center; flex: 1;">
+					<input id="apiKey" type="password"
+						   placeholder="Provide your own valid OpenAI API key..."
+						   style="flex: 1; background: rgba(15,23,42,0.95); border: 1px solid rgba(56,189,248,0.4); border-radius: 9px; padding: 0.45rem 0.65rem; color: var(--text); font-size: 0.85rem;">
+					<div class="pill" id="keyStatus"
+						 style="font-size: 0.75rem; padding: 0.25rem 0.6rem; background: rgba(148,163,184,0.2);">Basic mode</div>
+			      </div>
+				</div>
+				<!-- <p class="field-desc">Upcoming supported AI APIs: Perplexity, HuggingFace, Groq, etc...</p> -->
+			</div>			
+                <nav class="tab-list">
+                    <button class="tab-btn tab-btn-active" data-tab="text" style="padding: 7px;>
+                        <span class="icon">📝</span><span>Text</span>
+                    </button>
+                    <button class="tab-btn" data-tab="image" style="padding: 7px;>
+                        <span class="icon">🖼️</span><span>Image</span>
+                    </button>
+                    <button class="tab-btn" data-tab="video" style="padding: 7px;>
+                        <span class="icon">🎥</span><span>Video</span>
+                    </button>
+                    <button class="tab-btn" data-tab="audio" style="padding: 7px;>
+                        <span class="icon">🎵</span><span>Audio</span>
+                    </button>
+                    <button class="tab-btn" data-tab="code" style="padding: 7px;>
+                        <span class="icon">💻</span><span>Code</span>
+                    </button>
+					<div class="app-title-actions">
+                    <button id="helpToggle" class="help-link" type="button">
+                        <span>?</span>
+                    </button>
+                </div>
+					
+                </nav>	
+            </div>
+
+            <div class="tab-panels">
+                <!-- TEXT TAB -->
+                <div class="tab-panel tab-panel-active" data-tab-panel="text">
+                    <div class="label-inline-row">
+                        <label for="textRole">Expert persona (optional)</label>
+                        <p class="field-desc">Who should the AI act as?</p>
+                    </div>
+                    <input id="textRole" type="text" placeholder="e.g. senior copywriter for ecommerce brands">
+
+                    <div class="label-inline-row">
+                        <label for="textTone">Tone of voice</label>
+                    </div>
+                    <select id="textTone">
+                        <option>Neutral professional</option>
+                        <option>Friendly and casual</option>
+                        <option>Persuasive and sales-focused</option>
+                        <option>Educational and clear</option>
+                        <option>Technical and precise</option>
+                    </select>
+
+                    <div class="label-inline-row">
+                        <label for="textGoal">What should the AI write?</label>
+                        <p class="field-desc">Describe the main output (article, ad, email, script, etc.).</p>
+                    </div>
+                    <input id="textGoal" type="text" placeholder="e.g. a 600-word blog post about beginner calisthenics">
+
+                    <label for="textAudience">Who is it for? (audience)</label>
+                    <input id="textAudience" type="text" placeholder="e.g. busy professionals with no gym access">
+
+                    <label for="textDetails">Key details / context</label>
+                    <textarea id="textDetails" placeholder="Add product details, examples, brand voice notes, links, offers, or constraints." style="height: 68px;"></textarea>
+
+                    <label for="textFormat">Preferred structure</label>
+                    <select id="textFormat">
+                        <option>Short paragraphs with headings</option>
+                        <option>Bullet list</option>
+                        <option>Step-by-step numbered guide</option>
+                        <option>Social media posts (multiple variations)</option>
+                        <option>Script format (dialogue + scene directions)</option>
+                    </select>
+
+                    <div class="button-row">
+                        <span class="hint">Tip: add 1-2 example lines in the context to lock in style.</span>
+                        <button class="primary" type="button" id="textGenerate" data-ai-hooked="1">Generate text prompt</button>
+                    </div>
+
+                    <div class="output-box">
+						<div class="output-label">
+						  <span>Text prompt</span>
+						  <div style="display: flex; gap: 0.4rem; align-items: center;">
+							<span class="pill ai-badge" style="display: none;">
+							  🤖 AI enhanced
+							</span>
+							<button class="copy-btn" type="button" data-copy-target="textOutput">
+							  Copy
+							</button>
+							<button class="copy-btn" type="button" id="textOptimizeBtn">
+							  Optimize
+							</button>
+						  </div>
+						</div>                        
+                        <textarea id="textOutput" class="output-textarea" placeholder="Fill in the fields above and click Generate..." style="height: 120px;" data-ai-tracked="1"></textarea>
+                    </div>
+                    <div class="collections-box" data-collections-for="text">
+                        <div class="collections-actions-row">
+						  <!-- 1. Collection name textfield -->
+						  <input type="text" class="collection-name-input" placeholder="Collection name">
+
+						  <!-- 2. Buttons that just open the Pro login modal -->
+						  <div class="collections-buttons-group">
+							<button class="collections-btn collections-btn-primary save-collection-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Save current</button>
+
+							<button class="collections-btn export-csv-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Export CSV</button>
+
+							<button type="button" class="collections-btn" style="cursor: pointer; padding: 0.3rem 0.7rem;" onclick="openProModal()" title="Pro feature">Import CSV</button>
+
+							<input type="file" id="import-text" class="import-input" accept=".csv">
+						  </div>
+						</div>
+
+							<!-- 3. Heading: PROMPT COLLECTIONS -->
+							<div class="collections-header"><h3>SAMPLE PROMPT COLLECTIONS</h3></div>
+
+						<div class="collections-list" id="textCollectionsList">
+						  <!-- items injected by JS -->
+						</div>
+                    </div>
+                </div>
+
+                <!-- IMAGE TAB -->
+                <div class="tab-panel" data-tab-panel="image">
+                    <div class="row">
+                        <div>
+                            <label for="imageTool">Target image model</label>
+                            <select id="imageTool">
+                                <option>Midjourney</option>
+                                <option>DALLE</option>
+                                <option>Stable Diffusion</option>
+                                <option>Generic text-to-image</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="imageStyle">Style</label>
+                            <select id="imageStyle">
+                                <option>Realistic photography</option>
+                                <option>3D render</option>
+                                <option>Watercolor illustration</option>
+                                <option>Flat vector art</option>
+                                <option>Anime stylized</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="label-inline-row">
+                        <label for="imageSubject">Main subject</label>
+                        <p class="field-desc">What should be in the image?</p>
+                    </div>
+                    <input id="imageSubject" type="text" placeholder="e.g. a small coffee shop on a rainy street at night">
+
+                    <label for="imageDetails">Composition, colors, lighting, mood</label>
+                    <textarea id="imageDetails" placeholder="Camera angle, focal length, color palette, lighting, mood, background, level of detail, etc." style="height: 0px;"></textarea>
+
+                    <label for="imageFormat">Output usage</label>
+                    <select id="imageFormat">
+                        <option>Social media post</option>
+                        <option>Website hero image</option>
+                        <option>Product photo</option>
+                        <option>Logo concept</option>
+                        <option>Print poster</option>
+                    </select>
+
+                    <div class="button-row">
+                        <span class="hint">Tip: be very specific about lighting, camera, and style.</span>
+                        <button class="primary" type="button" id="imageGenerate" data-ai-hooked="1">Generate image prompt</button>
+                    </div>
+
+                    <div class="output-box">
+                        <div class="output-label">
+						  <span>Image prompt</span>
+						  <div style="display: flex; gap: 0.4rem; align-items: center;">
+							<span class="pill ai-badge" style="display: none;">
+							  🤖 AI enhanced
+							</span>
+							<button class="copy-btn" type="button" data-copy-target="imageOutput">
+							  Copy
+							</button>
+							<button class="copy-btn" type="button" id="imageOptimizeBtn">
+							  Optimize
+							</button>
+						  </div>
+						</div>
+                        <textarea id="imageOutput" class="output-textarea" placeholder="Fill in the fields above and click Generate..." style="height: 0px;" data-ai-tracked="1"></textarea>
+                    </div>
+                    <div class="collections-box" data-collections-for="image">
+                        <div class="collections-actions-row">
+						  <!-- 1. Collection name textfield -->
+						  <input type="text" class="collection-name-input" placeholder="Collection name">
+
+						  <!-- 2. Buttons that just open the Pro login modal -->
+						  <div class="collections-buttons-group">
+							<button class="collections-btn collections-btn-primary save-collection-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Save current</button>
+
+							<button class="collections-btn export-csv-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Export CSV</button>
+
+							<button type="button" class="collections-btn" style="cursor: pointer; padding: 0.3rem 0.7rem;" onclick="openProModal()" title="Pro feature">Import CSV</button>
+
+							<input type="file" id="import-text" class="import-input" accept=".csv">
+						  </div>
+						</div>
+
+							<!-- 3. Heading: PROMPT COLLECTIONS -->
+							<div class="collections-header"><h3>SAMPLE PROMPT COLLECTIONS</h3></div>
+						<div class="collections-list" id="imageCollectionsList">
+						  <!-- items injected by JS -->
+						</div>
+                    </div>
+                </div>
+
+                <!-- VIDEO TAB -->
+                <div class="tab-panel" data-tab-panel="video">
+                    <div class="row">
+                        <div>
+                            <label for="videoTool">Target video tool</label>
+                            <select id="videoTool">
+                                <option>Generic text-to-video</option>
+                                <option>Synthesia avatar video</option>
+                                <option>Runway / Pika style</option>
+                                <option>Short-form social video</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="videoDuration">Duration format</label>
+                            <select id="videoDuration">
+                                <option>Short (10-30 seconds)</option>
+                                <option>Medium (30-90 seconds)</option>
+                                <option>Long (2-5 minutes)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="label-inline-row">
+                        <label for="videoConcept">Concept / story</label>
+                    </div>
+                    <input id="videoConcept" type="text" placeholder="e.g. promo video introducing a new fitness app">
+
+                    <label for="videoDetails">Scenes, camera, text, voice</label>
+                    <textarea id="videoDetails" placeholder="Describe key scenes, camera movement, onscreen text, voiceover style, background music, aspect ratio, etc." style="height: 75px;"></textarea>
+
+                    <label for="videoGoal">Goal</label>
+                    <input id="videoGoal" type="text" placeholder="e.g. drive app downloads, explain how the product works">
+
+                    <div class="button-row">
+                        <span class="hint">Tip: outline 3-5 scenes in your description for better structure.</span>
+                        <button class="primary" type="button" id="videoGenerate" data-ai-hooked="1">Generate video prompt</button>
+                    </div>
+
+                    <div class="output-box">
+						<div class="output-label">
+						  <span>Video prompt</span>
+						  <div style="display: flex; gap: 0.4rem; align-items: center;">
+							<span class="pill ai-badge" style="display: none;">
+							  🤖 AI enhanced
+							</span>
+							<button class="copy-btn" type="button" data-copy-target="videoOutput">
+							  Copy
+							</button>
+							<button class="copy-btn" type="button" id="videoOptimizeBtn">
+							  Optimize
+							</button>
+						  </div>
+						</div>
+                        <textarea id="videoOutput" class="output-textarea" placeholder="Fill in the fields above and click Generate..." style="height: 0px;" data-ai-tracked="1"></textarea>
+                    </div>
+                    <div class="collections-box" data-collections-for="video">
+                        <div class="collections-actions-row">
+						  <!-- 1. Collection name textfield -->
+						  <input type="text" class="collection-name-input" placeholder="Collection name">
+
+						  <!-- 2. Buttons that just open the Pro login modal -->
+						  <div class="collections-buttons-group">
+							<button class="collections-btn collections-btn-primary save-collection-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Save current</button>
+
+							<button class="collections-btn export-csv-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Export CSV</button>
+
+							<button type="button" class="collections-btn" style="cursor: pointer; padding: 0.3rem 0.7rem;" onclick="openProModal()" title="Pro feature">Import CSV</button>
+
+							<input type="file" id="import-text" class="import-input" accept=".csv">
+						  </div>
+						</div>
+
+							<!-- 3. Heading: PROMPT COLLECTIONS -->
+							<div class="collections-header"><h3>SAMPLE PROMPT COLLECTIONS</h3></div>
+						<div class="collections-list" id="videoCollectionsList">
+						  <!-- items injected by JS -->
+						</div>
+                    </div>
+                </div>
+
+                <!-- AUDIO TAB -->
+                <div class="tab-panel" data-tab-panel="audio">
+                    <div class="row">
+                        <div>
+                            <label for="audioType">Type</label>
+                            <select id="audioType">
+                                <option>Background music</option>
+                                <option>Song idea</option>
+                                <option>Sound effects</option>
+                                <option>Voiceover narration</option>
+                            </select>
+
+                            <label for="audioMood">Mood / genre</label>
+                            <input id="audioMood" type="text" placeholder="e.g. chill lofi hip-hop, uplifting pop, dark cinematic">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="audioUse">Where will it be used?</label>
+                        <input id="audioUse" type="text" placeholder="e.g. YouTube vlog, game menu, podcast intro, TikTok">
+                    </div>
+
+                    <label for="audioDetails">Instruments, tempo, structure, voice details</label>
+                    <textarea id="audioDetails" placeholder="Mention instruments, tempo (bpm), energy level, sections (intro/verse/chorus), voice gender/accent if needed, etc." style="height: 75px;"></textarea>
+
+                    <div class="button-row">
+                        <span class="hint">Tip: describe 2-3 reference artists or songs for closer matches.</span>
+                        <button class="primary" type="button" id="audioGenerate" data-ai-hooked="1">Generate audio/music prompt</button>
+                    </div>
+
+                    <div class="output-box">
+						<div class="output-label">
+						  <span>Audio prompt</span>
+						  <div style="display: flex; gap: 0.4rem; align-items: center;">
+							<span class="pill ai-badge" style="display: none;">
+							  🤖 AI enhanced
+							</span>
+							<button class="copy-btn" type="button" data-copy-target="audioOutput">
+							  Copy
+							</button>
+							<button class="copy-btn" type="button" id="audioOptimizeBtn">
+							  Optimize
+							</button>
+						  </div>
+						</div>
+                        <textarea id="audioOutput" class="output-textarea" placeholder="Fill in the fields above and click Generate..." style="height: 0px;" data-ai-tracked="1"></textarea>
+                    </div>
+                    <div class="collections-box" data-collections-for="audio">
+                        <div class="collections-actions-row">
+						  <!-- 1. Collection name textfield -->
+						  <input type="text" class="collection-name-input" placeholder="Collection name">
+
+						  <!-- 2. Buttons that just open the Pro login modal -->
+						  <div class="collections-buttons-group">
+							<button class="collections-btn collections-btn-primary save-collection-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Save current</button>
+
+							<button class="collections-btn export-csv-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Export CSV</button>
+
+							<button type="button" class="collections-btn" style="cursor: pointer; padding: 0.3rem 0.7rem;" onclick="openProModal()" title="Pro feature">Import CSV</button>
+
+							<input type="file" id="import-text" class="import-input" accept=".csv">
+						  </div>
+						</div>
+
+							<!-- 3. Heading: PROMPT COLLECTIONS -->
+							<div class="collections-header"><h3>SAMPLE PROMPT COLLECTIONS</h3></div>
+						<div class="collections-list" id="audioCollectionsList">
+						  <!-- items injected by JS -->
+						</div>
+                    </div>
+                </div>
+
+                <!-- CODE TAB -->
+                <div class="tab-panel" data-tab-panel="code">
+                    <div class="row">
+                        <div>
+                            <label for="codeLang">Language / stack</label>
+                            <input id="codeLang" type="text" placeholder="e.g. HTML/CSS/JS, Python, Node.js with Express, React">
+                            <label for="codeTaskType">Task type</label>
+                            <select id="codeTaskType">
+                                <option>Generate new code</option>
+                                <option>Refactor / clean up code</option>
+                                <option>Debug / fix an error</option>
+                                <option>Explain code step-by-step</option>
+                                <option>Optimize performance</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="label-inline-row">
+                        <label for="codeGoal">What should the code do?</label>
+                    </div>
+                    <input id="codeGoal" type="text" placeholder="e.g. simple landing page with email signup">
+
+                    <label for="codeContext">Context / current code, error, constraints</label>
+                    <textarea id="codeContext" placeholder="Paste relevant code snippets or error messages, describe libraries/frameworks, file structure, environment, etc." style="height: 75px;"></textarea>
+
+                    <label for="codeExtras">Special requirements</label>
+                    <input id="codeExtras" type="text" placeholder="e.g. mobile-first, no external libraries, add comments, follow best practices">
+
+                    <div class="button-row">
+                        <span class="hint">Tip: include the smallest reproducible example of your bug.</span>
+                        <button class="primary" type="button" id="codeGenerate" data-ai-hooked="1">Generate code prompt</button>
+                    </div>
+
+                    <div class="output-box">
+						<div class="output-label">
+						  <span>Code prompt</span>
+						  <div style="display: flex; gap: 0.4rem; align-items: center;">
+							<span class="pill ai-badge" style="display: none;">
+							  🤖 AI enhanced
+							</span>
+							<button class="copy-btn" type="button" data-copy-target="codeOutput">
+							  Copy
+							</button>
+							<button class="copy-btn" type="button" id="codeOptimizeBtn">
+							  Optimize
+							</button>
+						  </div>
+						</div>
+                        <textarea id="codeOutput" class="output-textarea" placeholder="Fill in the fields above and click Generate..." style="height: 0px;" data-ai-tracked="1"></textarea>
+                    </div>
+                    <div class="collections-box" data-collections-for="code">
+                        <div class="collections-actions-row">
+						  <!-- 1. Collection name textfield -->
+						  <input type="text" class="collection-name-input" placeholder="Collection name">
+
+						  <!-- 2. Buttons that just open the Pro login modal -->
+						  <div class="collections-buttons-group">
+							<button class="collections-btn collections-btn-primary save-collection-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Save current</button>
+
+							<button class="collections-btn export-csv-btn" type="button" onclick="openProModal()" title="Pro feature">
+							  Export CSV</button>
+
+							<button type="button" class="collections-btn" style="cursor: pointer; padding: 0.3rem 0.7rem;" onclick="openProModal()" title="Pro feature">Import CSV</button>
+
+							<input type="file" id="import-text" class="import-input" accept=".csv">
+						  </div>
+						</div>
+
+							<!-- 3. Heading: PROMPT COLLECTIONS -->
+							<div class="collections-header"><h3>SAMPLE PROMPT COLLECTIONS</h3></div>
+						<div class="collections-list" id="codeCollectionsList">
+						  <!-- items injected by JS -->
+						</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-top: 1.2rem; border-top: 1px solid rgba(148,163,184,0.5); padding-top: 0.7rem; font-size: 0.78rem; color: var(--muted-dark);">
+            <h3 style="font-size: 0.9rem; margin: 0 0 0.3rem; color: var(--text);">Collections, CSV compatibility</h3>
+            <ul style="margin: 0 0 0.3rem 1.1rem; padding: 0;">
+                <li style="margin-bottom: 0.15rem;">Collections are stored in browser localStorage, per tab (Text, Image, Video, Audio, Code).</li>
+				<li style="margin-bottom: 0.15rem;">Collections per tab are exported to a single CSV. Import only the exported collections per tab.</li>
+                <li style="margin-bottom: 0.15rem;">Export CSV downloads a CSV snapshot for the current tab.</li>
+                <li style="margin-bottom: 0.15rem;">Import CSV adds collections from exported CSV files.</li>
+                <li style="margin-bottom: 0.15rem;">Files are not synced automatically - you choose where to save your CSVs.</li>
+				<li style="margin-bottom: 0.15rem;">For portability, keep backups of your CSV exports in cloud storage.</li>
+            </ul>
+        </section>
+        <div class="footer">Built with HTML, CSS &amp; JS.</div>
+    </div>
+
+    <!-- Help Overlay -->
+    <div class="help-overlay-backdrop" id="helpBackdrop">
+        <div class="help-overlay">
+            <div class="help-header">
+                <div>
+                    <span class="help-tag">Self-help guide</span>
+                    <h2>How to...</h2>
+                </div>
+                <button class="help-close" type="button" id="helpClose">Close</button>
+            </div>
+            <div class="help-body">
+                <p>Promptness lets you generate prompts and manage collections locally, with CSV export/import per tab.</p>
+
+                <h3>Using collections</h3>
+                <ul>
+                    <li>Pick a tab and generate a prompt into the output box.</li>
+                    <li>Enter a collection name and click <strong>Save current</strong> to add it to the list for that tab.</li>
+                    <li>Click any saved item or its <strong>Load</strong> button to restore that prompt to the output box.</li>
+                    <li>Use the <strong>Rename</strong> and <strong>Delete</strong> buttons on each row to maintain the list.</li>
+                    <li>Use <strong>Export CSV</strong> to backup and <strong>Import CSV</strong> to restore collections between browsers/devices.</li>
+                </ul>
+
+                <h3>Storage limitations</h3>
+                <ul>
+                    <li>Collections live in your browser's localStorage and do not auto-sync across devices.</li>
+                    <li>CSV files are saved where you choose - you must export/import them manually when needed.</li>
+                    <li>This app calls Open AI API - you need to provide your own. If not, it only produces form base prompts that you copy into your tools.</li>
+                </ul>
+
+	<hr style="border: none; border-top: 1px solid rgba(148,163,184,0.4); margin: 0.75rem 0 0.5rem;">
+
+	<div class="help-section">
+	  <h2>Promptness EULA &amp; Terms of Use</h2>
+	  <p class="help-tag">LEGAL TERMS</p>
+
+	  <p>
+		<strong>Last updated:</strong> [DECEMBER 2025]
+	  </p>
+
+	  <p>
+		This End User License Agreement and Terms of Use (“Agreement”) is a legal agreement between you
+		(“User”) and <!--[YOUR NAME / COMPANY]--> (“Provider”) governing your use of the <strong>Promptness</strong>
+		application, including its Progressive Web App (PWA) and browser-based versions (“App”). By
+		accessing or using the App, you agree to be bound by this Agreement. If you do not agree, do not
+		use the App.
+	  </p>
+
+	  <h3>1. License Grant</h3>
+	  <p>
+		Provider grants you a limited, non-exclusive, non-transferable, non-sublicensable license to
+		access and use Promptness for your personal or internal business purposes only, subject to this
+		Agreement. This license does not transfer any ownership rights in the App or its content.
+	  </p>
+
+	  <h3>2. Permitted Use</h3>
+	  <p>
+		Subject to this Agreement, you may:
+	  </p>
+	  <ul>
+		<li>Access and use Promptness to create, manage, and reuse prompts for text, image, video, audio, code, and other supported formats.</li>
+		<li>Store your own prompt content locally (for example in browser storage or CSV exports) for your personal or internal business use.</li>
+		<li>Install and use the PWA version of Promptness on your compatible devices.</li>
+	  </ul>
+
+	  <h3>3. Prohibited Use</h3>
+	  <p>You may not:</p>
+	  <ul>
+		<li>Copy, distribute, resell, or publicly host the App or any substantial part of its code, design, or user interface, including hosting your own public or paid clone of Promptness.</li>
+		<li>Modify, adapt, translate, reverse engineer, decompile, or disassemble any part of the App except where such restrictions are prohibited by applicable law.</li>
+		<li>Bypass or attempt to bypass any technical protection measures, license checks, paywalls, or usage limits (including free/paid feature distinctions).</li>
+		<li>Use the App to create, generate, or distribute content that is illegal, defamatory, abusive, or infringes the intellectual property, privacy, or other rights of any third party.</li>
+		<li>Remove, alter, or obscure any copyright, trademark, or other proprietary notices displayed in or with the App.</li>
+		<li>Use automated tools (such as bots or scrapers) to systematically copy or harvest the App’s interface, assets, or non-user content.</li>
+	  </ul>
+
+	  <h3>4. Accounts, Access, and Payment</h3>
+	  <p>
+		Some features of Promptness may require registration of an account and/or payment of fees. You
+		agree to provide accurate information and keep it up to date. Where Promptness is offered as a
+		paid product or subscription, access to certain features may be conditional on timely payment.
+		Provider may suspend or limit access if payment is overdue or reversed. License keys, access
+		tokens, or paid accounts are personal to you and may not be shared, sold, or transferred without
+		Provider’s written consent.
+	  </p>
+
+	  <h3>5. Offline Use and Local Storage</h3>
+	  <p>
+		Promptness may offer offline functionality using local storage and caching technologies. You are
+		responsible for managing your own device storage, backups, and security. You must not use offline
+		or locally stored copies of the App to circumvent licensing, payment requirements, or other limits
+		set by Provider.
+	  </p>
+
+	  <h3>6. Intellectual Property</h3>
+	  <p>
+		Promptness, including its code, design, logos, branding, text, and other non-user content, is
+		owned by Provider or its licensors and is protected by copyright, trademark, and other laws. You
+		retain all rights in your own prompts and content that you create with the App and are solely
+		responsible for that content and for any rights or permissions required to use it.
+	  </p>
+
+	  <h3>7. Third-Party Services</h3>
+	  <p>
+		Promptness may integrate with or link to third-party services (such as payment processors or AI
+		providers). Those services are governed by their own terms and privacy policies. Provider is not
+		responsible for the availability, security, or content of third-party services.
+	  </p>
+
+	  <h3>8. No Warranty</h3>
+	  <p>
+		The App is provided on an “as is” and “as available” basis, without warranties of any kind,
+		whether express or implied, including but not limited to warranties of merchantability, fitness
+		for a particular purpose, or non-infringement. Provider does not warrant that the App will be
+		error-free, secure, or uninterrupted, or that defects will be corrected.
+	  </p>
+
+	  <h3>9. Limitation of Liability</h3>
+	  <p>
+		To the maximum extent permitted by law, Provider will not be liable for any indirect, incidental,
+		consequential, special, or punitive damages, or for any loss of data, revenue, profits, or
+		business, arising out of or related to your use of or inability to use the App. Provider’s total
+		aggregate liability for any claims arising out of or related to this Agreement or the App will
+		not exceed the amount you actually paid to Provider for access to the App during the twelve (12)
+		months prior to the event giving rise to the claim (or, if you did not pay, zero).
+	  </p>
+
+	  <h3>10. Termination</h3>
+	  <p>
+		This Agreement is effective until terminated. Provider may suspend or terminate your access to
+		the App at any time if you breach this Agreement or if Provider discontinues the App. Upon
+		termination, your license to use the App ends immediately. Sections that by their nature should
+		survive (including Intellectual Property, No Warranty, Limitation of Liability) will continue to
+		apply.
+	  </p>
+
+	  <h3>11. Updates and Changes</h3>
+	  <p>
+		Provider may modify or update the App and this Agreement from time to time. Updated versions may
+		be posted or made available within the App. If you continue to use the App after changes to this
+		Agreement take effect, you will be deemed to have accepted the revised terms.
+	  </p>
+
+	  <h3>12. Governing Law and Dispute Resolution</h3>
+	  <p>
+		This Agreement will be governed by and construed in accordance with the laws <!-- of
+		[YOUR COUNTRY / STATE] -->, without regard to its conflict of law rules. Any disputes arising out of
+		or in connection with this Agreement or the App will be subject to the exclusive jurisdiction of
+		the courts <!-- of [YOUR CITY / REGION] -->, unless applicable law requires otherwise.
+	  </p>
+
+	  <h3>13. Contact</h3>
+	  <p class="field-desc">
+		If you have questions about this Agreement or Promptness, contact:
+		Promptness Developer – esv.tnt010@gmail.com
+	  </p>
+	  <!--
+	  <p class="field-desc">
+		This EULA/Terms of Use text is provided as a general template and should be reviewed and adapted
+		by a qualified legal professional for your specific situation and jurisdiction.
+	  </p> -->
+	</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/JavaScript">
+function toggleApiKeyMenu() {
+  const menu = document.getElementById('apiKeyMenu');
+  menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+}
+
+function autoResizeTextarea(el) {
+  //if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+document.getElementById('textOutput').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('textOutput'));
+});
+
+document.getElementById('imageOutput').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('imageOutput'));
+});
+
+document.getElementById('videoOutput').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('videoOutput'));
+});
+
+document.getElementById('audioOutput').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('audioOutput'));
+});
+
+document.getElementById('codeOutput').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('codeOutput'));
+});
+
+document.getElementById('textDetails').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('textDetails'));
+});
+
+document.getElementById('imageDetails').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('imageDetails'));
+});
+
+document.getElementById('videoDetails').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('videoDetails'));
+});
+
+document.getElementById('audioDetails').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('audioDetails'));
+});
+
+document.getElementById('codeContext').addEventListener('input', () => {
+  autoResizeTextarea(document.getElementById('codeContext'));
+});
+			// ===== AI BOOSTER (NO EXTERNAL API CALLS) =====
+			const BOOSTERS = {
+			  text: '\n\nAdd: expert tone, clear structure (intro, key points, conclusion), concise sentences, and remove vague wording or repetition.',
+			  image: '\n\nAdd: (masterpiece, best quality:1.3), sharp symmetrical composition, clean background, clear subject separation, and remove clutter or unnecessary elements.',
+			  video: '\n\nAdd: three clear scenes (hook, main explanation, closing), smooth transitions, clear on-screen text, and remove redundant or confusing shots.',
+			  audio: '\n\nAdd: clear mix, consistent volume, appropriate tempo, simple structure (intro, main part, outro), and remove background noise.',
+			  code: '\n\nAdd: clear comments, consistent naming, small functions, input validation, and remove dead or duplicated code.'
+			};
+			
+			// Generic validity: looks like a real secret (long, safe characters)
+			function isValidApiKey(key) {
+			  // Must start with a letter, be reasonably long, and use safe chars
+			  return /^[A-Za-z][A-Za-z0-9_\-]{23,}$/.test(key);
+			}
+
+			// Best-effort provider guess based on prefix (for display only)
+			function detectProvider(key) {
+			  if (!key) return null;
+
+			  if (key.startsWith('pplx-')) return 'Perplexity';     // Perplexity
+			  if (key.startsWith('sk-'))   return 'OpenAI';         // OpenAI
+			  if (key.startsWith('gsk_') || key.startsWith('gsk-')) return 'Groq';        // Groq examples
+			  if (key.startsWith('hf_')  || key.startsWith('hf-'))  return 'HuggingFace'; // HF Hub/API
+
+			  return 'Custom';
+			}			
+
+			function hasValidApiKey() {
+			  const input = document.getElementById('apiKey');
+			  const key = input ? input.value.trim() : '';
+			  return isValidApiKey(key);
+			}
+
+		// TARGETED FIX - Removes ALL ✨ (tab): duplicates
+		function stripAllOptimizations(text) {
+		  if (!text) return '';
+		  return text
+			// CRITICAL: Remove ALL ✨ (text):, ✨ (image): etc. patterns
+			.replace(/✨\s*\(\w+\)\s*:/gi, '')
+			.replace(/✨\s*\([a-zA-Z]+\)\s*:/gi, '')
+			
+			// Remove other optimization prefixes
+			.replace(/^(✨|🔥|BASIC OPTIMIZED|AI OPTIMIZED).*?:/gmi, '')
+			.replace(/(✨|🔥|BASIC OPTIMIZED|AI OPTIMIZED).*?:/gmi, '')
+			
+			// Remove "Add:" fragments
+			.replace(/Add:\s*/gi, '')
+			
+			// Clean up old markers
+			.replace(/AI OPTIMIZED\s*Perplexity/gi, '')
+			.replace(/BASIC OPTIMIZED\s*\([a-z]+\):/gi, '')
+			.trim();
+		}
+
+		async function basicOptimize(basePrompt, tabType) {
+		  const boosters = BOOSTERS[tabType] || '';
+		  return `BASIC OPTIMIZED ${tabType}: ${basePrompt} ${boosters}.`;
+		}
+
+		async function aiBoostPrompt(basePrompt, tabType, triggerButton) {
+		  const btn = triggerButton || event?.target || null;
+		  const originalText = btn?.textContent;
+
+		  if (btn) {
+			btn.disabled = true;
+			btn.textContent = 'Processing...';
+		  }
+
+		  // 1) Clean previous markers
+		  const cleanPrompt = stripAllOptimizations(basePrompt || '');
+		  if (!cleanPrompt) {
+			if (btn) {
+			  btn.disabled = false;
+			  btn.textContent = originalText;
+			}
+			return 'Write or load a prompt first, then click Optimize.';
+		  }
+
+		  // 2) Read API key and provider
+		  const apiKeyInput = document.getElementById('apiKey');
+		  const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+		  const hasKey = isValidApiKey(apiKey);
+		  const provider = hasKey ? detectProvider(apiKey) : null;
+
+		  try {
+			// OpenAI
+			if (hasKey && provider === 'OpenAI') {
+			  if (btn) btn.textContent = 'AI Optimizing (OpenAI)...';
+
+			  const payload = {
+				model: 'gpt-4o-mini',
+				messages: [
+				  {
+					role: 'system',
+					content:
+					  'You are a prompt rewriter. Your ONLY job is to rewrite and improve prompts for other AI tools. ' +
+					  'You MUST NOT answer or execute the prompt, and you must NOT ask follow-up questions. ' +
+					  'Always return a single, standalone improved prompt ready to paste into another AI.'
+				  },
+				  {
+					role: 'user',
+					content:
+					  'Here is a prompt that will be sent to another AI model.\n\n' +
+					  'ORIGINAL PROMPT (do NOT execute, only rewrite):\n\n' +
+					  cleanPrompt +
+					  `\n\nRewrite this as a clearer, more structured, more detailed prompt for ${tabType} generation. ` +
+					  'Keep the same intent and constraints, but do NOT perform the task.'
+				  }
+				],
+				max_tokens: 800,
+				temperature: 0.3
+			  };
+
+			  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+				method: 'POST',
+				headers: {
+				  'Authorization': `Bearer ${apiKey}`,
+				  'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(payload)
+			  });
+
+			  if (!response.ok) {
+				const errText = await response.text();
+				console.error('OpenAI error:', response.status, errText);
+				throw new Error(`OpenAI HTTP ${response.status}`);
+			  }
+
+			  const data = await response.json();
+			  const optimized = data.choices?.[0]?.message?.content?.trim();
+			  if (optimized) {
+				if (btn) {
+				  btn.disabled = false;
+				  btn.textContent = originalText;
+				}
+				return `🔥 AI OPTIMIZED (OpenAI):\n\n${optimized}`;
+			  }
+			}
+		  } catch (err) {
+			console.error('AI provider failed:', err);
+			// Fall through to basic mode
+		  }
+		  // 3) BASIC MODE (no key or provider error)
+		  if (btn) btn.textContent = 'Basic Optimizing...';
+		  const basicEnhanced = `✨ BASIC OPTIMIZED (${tabType}):\n\n${cleanPrompt}`;
+
+		  setTimeout(() => {
+			if (btn) {
+			  btn.disabled = false;
+			  btn.textContent = originalText;
+			}
+		  }, 800);
+
+		  return basicEnhanced;
+		}
+
+		// Key status pill
+		document.addEventListener('DOMContentLoaded', () => {
+		  const apiKeyInput = document.getElementById('apiKey');
+		  const status = document.getElementById('keyStatus');
+		  if (!apiKeyInput || !status) return;
+
+		  apiKeyInput.addEventListener('input', e => {
+			const key = e.target.value.trim();
+			if (isValidApiKey(key)) {
+			  const provider = detectProvider(key);
+			  if (provider === 'OpenAI') {
+				status.textContent = 'PRO mode (OpenAI)';
+				status.style.background = 'rgba(34,197,94,0.3)';
+			  } else if (provider === 'Perplexity') {
+				status.textContent = 'Upcoming (Perplexity)';
+				status.style.background = 'rgba(148,163,184,0.2)';
+			  } else if (provider === 'Groq') {
+				status.textContent = 'Upcoming (Groq)';
+				status.style.background = 'rgba(148,163,184,0.2)';
+			  } else if (provider === 'HuggingFace') {
+				status.textContent = 'Upcoming (HuggingFace)';
+				status.style.background = 'rgba(148,163,184,0.2)';
+			  } else {
+				status.textContent = 'Upcoming (Custom)';
+				status.style.background = 'rgba(148,163,184,0.2)';
+			  }
+			} else if (key.length > 0) {
+			  status.textContent = 'Invalid key';
+			  status.style.background = 'rgba(248,113,113,0.3)';
+			} else {
+			  status.textContent = 'Basic mode';
+			  status.style.background = 'rgba(148,163,184,0.2)';
+			}
+		  });
+	
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        const tabNiceNames = { text: 'Text', image: 'Image', video: 'Video', audio: 'Audio', code: 'Code' };
+        let currentTab = 'text';
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-tab');
+                tabButtons.forEach(b => b.classList.remove('tab-btn-active'));
+                tabPanels.forEach(p => p.classList.remove('tab-panel-active'));
+                btn.classList.add('tab-btn-active');
+                const panel = document.querySelector(`[data-tab-panel="${target}"]`);
+                if (panel) panel.classList.add('tab-panel-active');
+                currentTab = target;
+                //renderCollections();
+            });
+        });
+
+		// Copy to clipboard (desktop + mobile friendly)
+		document.querySelectorAll('.copy-btn').forEach(btn => {
+		  btn.addEventListener('click', async () => {
+			const targetId = btn.getAttribute('data-copy-target');
+			const field = document.getElementById(targetId);
+			if (!field || !field.value.trim()) return;
+
+			const text = field.value;
+			let copied = false;
+
+			// 1) Try modern async clipboard API
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+			  try {
+				await navigator.clipboard.writeText(text);
+				copied = true;
+			  } catch (e) {
+				copied = false;
+			  }
+			}
+
+			// 2) Fallback for mobile/old browsers using a temporary textarea
+			if (!copied) {
+			  const temp = document.createElement('textarea');
+			  temp.value = text;
+			  // Keep it off-screen but focusable
+			  temp.style.position = 'fixed';
+			  temp.style.top = '-9999px';
+			  temp.style.left = '-9999px';
+			  document.body.appendChild(temp);
+			  temp.focus();
+			  temp.select();
+			  try {
+				document.execCommand('copy');
+				copied = true;
+			  } catch (e) {
+				copied = false;
+			  }
+			  document.body.removeChild(temp);
+			}
+
+			// Small UI feedback so users know something happened
+			const old = btn.textContent;
+			btn.textContent = copied ? 'Copied!' : 'Copy failed';
+			setTimeout(() => {
+			  btn.textContent = old;
+			}, 1200);
+		  });
+		});
+
+        // Generate handlers
+		document.getElementById('textGenerate').addEventListener('click', async (event) => {
+		  const role = document.getElementById('textRole').value.trim();
+		  const tone = document.getElementById('textTone').value;
+		  const goal = document.getElementById('textGoal').value.trim();
+		  const audience = document.getElementById('textAudience').value.trim();
+		  const details = document.getElementById('textDetails').value.trim();
+		  const format = document.getElementById('textFormat').value;
+		  const out = document.getElementById('textOutput');
+
+		  if (!goal) {
+			out.value = 'Describe what you want the AI to write in the “What should the AI write?” field, then click Generate.';
+			autoResizeTextarea(out);
+			return;
+		  }
+
+		  let base = role ? `You are a ${role}. You are an expert writer.\n` : '';
+		  base += `Your task is to write ${goal}`;
+		  if (audience) base += ` for the following audience: ${audience}.`;
+		  if (details) base += `\n\nContext/Details: ${details}`;
+		  base += `\n- Tone of voice: ${tone}.\n- Output format: ${format}.\n- Ask up to 3 clarification questions first if anything is unclear, then produce the final answer.`;
+
+		  const enhanced = await aiBoostPrompt(base, 'text', event.currentTarget);
+		  out.value = enhanced;
+		  autoResizeTextarea(out); // Add this line
+		});
+		
+		//Optimize handler text tab
+		const textOptimizeBtn = document.getElementById('textOptimizeBtn');
+		if (textOptimizeBtn) {
+		  textOptimizeBtn.addEventListener('click', async (event) => {
+			const out = document.getElementById('textOutput');
+			const current = out.value.trim();
+			if (!current) {
+			  out.value = 'Load or generate a prompt first, then click Optimize.';
+			  autoResizeTextarea(out);
+			  return;
+			}
+			const enhanced = await aiBoostPrompt(current, 'text', event.currentTarget);
+			out.value = enhanced;
+			autoResizeTextarea(out); // Add this line
+		  });
+		}
+
+		//Optimize handler image tab
+		const imageOptimizeBtn = document.getElementById('imageOptimizeBtn');
+		if (imageOptimizeBtn) {
+		  imageOptimizeBtn.addEventListener('click', async (event) => {
+			const out = document.getElementById('imageOutput');
+			const current = out.value.trim();
+			if (!current) {
+			  out.value = 'Load or generate an image prompt first, then click Optimize.';
+			  autoResizeTextarea(out);
+			  return;
+			}
+			const enhanced = await aiBoostPrompt(current, 'image', event.currentTarget);
+			out.value = enhanced;
+			autoResizeTextarea(out); // Add this line
+		  });
+		}
+
+		document.getElementById('imageGenerate').addEventListener('click', async (event) => {
+		  const tool = document.getElementById('imageTool').value;
+		  const style = document.getElementById('imageStyle').value;
+		  const subject = document.getElementById('imageSubject').value.trim();
+		  const details = document.getElementById('imageDetails').value.trim();
+		  const useCase = document.getElementById('imageFormat').value;
+		  const out = document.getElementById('imageOutput');
+
+		  if (!subject) {
+			out.value = 'Describe the main subject of the image, then click Generate.';
+			autoResizeTextarea(out);
+			return;
+		  }
+
+		  let prompt = `${subject}`;
+		  if (details) prompt += `, ${details}`;
+		  prompt += `. ${style}. Target model: ${tool}, use case: ${useCase}.`;
+
+		  const enhanced = await aiBoostPrompt(prompt, 'image', event.currentTarget);
+		  out.value = enhanced;
+		  autoResizeTextarea(out); // Add this line
+		});
+
+		document.getElementById('videoGenerate').addEventListener('click', async (event) => {
+		  const tool = document.getElementById('videoTool').value;
+		  const duration = document.getElementById('videoDuration').value;
+		  const concept = document.getElementById('videoConcept').value.trim();
+		  const details = document.getElementById('videoDetails').value.trim();
+		  const goal = document.getElementById('videoGoal').value.trim();
+		  const out = document.getElementById('videoOutput');
+
+		  if (!concept) {
+			out.value = 'Describe the main concept or story for the video, then click Generate.';
+			autoResizeTextarea(out);
+			return;
+		  }
+
+		  let base = `Create a ${duration.toLowerCase()} ${tool.toLowerCase()} video with the following concept: ${concept}.`;
+		  if (goal) base += ` Goal of the video: ${goal}.`;
+		  if (details) base += ` Details about scenes, camera, and audio: ${details}.`;
+		  base += ` Break the video into clear scenes and suggest onscreen text and voiceover. Include aspect ratio and any export notes if relevant.`;
+
+		  const enhanced = await aiBoostPrompt(base, 'video', event.currentTarget);
+		  out.value = enhanced;
+		  autoResizeTextarea(out); // Add this line
+		});
+
+		//Optimize handler video tab
+		const videoOptimizeBtn = document.getElementById('videoOptimizeBtn');
+		if (videoOptimizeBtn) {
+		  videoOptimizeBtn.addEventListener('click', async (event) => {
+			const out = document.getElementById('videoOutput');
+			const current = out.value.trim();
+			if (!current) {
+			  out.value = 'Load or generate a video prompt first, then click Optimize.';
+			  autoResizeTextarea(out);
+			  return;
+			}
+			const enhanced = await aiBoostPrompt(current, 'video', event.currentTarget);
+			out.value = enhanced;
+			autoResizeTextarea(out); // Add this line
+		  });
+		}
+
+		document.getElementById('audioGenerate').addEventListener('click', async (event) => {
+		  const type = document.getElementById('audioType').value;
+		  const mood = document.getElementById('audioMood').value.trim();
+		  const use = document.getElementById('audioUse').value.trim();
+		  const details = document.getElementById('audioDetails').value.trim();
+		  const out = document.getElementById('audioOutput');
+
+		  if (!mood && !details) {
+			out.value = 'Describe the mood/genre and some details (instruments, tempo, or references), then click Generate.';
+			autoResizeTextarea(out);
+			return;
+		  }
+
+		  let base = `Generate ${type.toLowerCase()}`;
+		  if (use) base += ` for ${use}`;
+		  if (mood) base += `. Mood/genre: ${mood}`;
+		  if (details) base += `. ${details}`;
+		  base += `. Provide multiple variations if appropriate and include a short description for each version.`;
+
+		  const enhanced = await aiBoostPrompt(base, 'audio', event.currentTarget);
+		  out.value = enhanced;
+		  autoResizeTextarea(out); // Add this line
+		});
+
+		//Optimize handler audio tab
+		const audioOptimizeBtn = document.getElementById('audioOptimizeBtn');
+		if (audioOptimizeBtn) {
+		  audioOptimizeBtn.addEventListener('click', async (event) => {
+			const out = document.getElementById('audioOutput');
+			const current = out.value.trim();
+			if (!current) {
+			  out.value = 'Load or generate an audio prompt first, then click Optimize.';
+			  autoResizeTextarea(out);
+			  return;
+			}
+			const enhanced = await aiBoostPrompt(current, 'audio', event.currentTarget);
+			out.value = enhanced;
+			autoResizeTextarea(out); // Add this line
+		  });
+		}
+
+		//Optimize handler code tab
+		const codeOptimizeBtn = document.getElementById('codeOptimizeBtn');
+		if (codeOptimizeBtn) {
+		  codeOptimizeBtn.addEventListener('click', async (event) => {
+			const out = document.getElementById('codeOutput');
+			const current = out.value.trim();
+			if (!current) {
+			  out.value = 'Load or generate a code prompt first, then click Optimize.';
+			  autoResizeTextarea(out);
+			  return;
+			}
+			const enhanced = await aiBoostPrompt(current, 'code', event.currentTarget);
+			out.value = enhanced;
+			autoResizeTextarea(out); // Add this line
+		  });
+		}
+
+		document.getElementById('codeGenerate').addEventListener('click', async (event) => {
+		  const lang = document.getElementById('codeLang').value.trim();
+		  const taskType = document.getElementById('codeTaskType').value;
+		  const goal = document.getElementById('codeGoal').value.trim();
+		  const context = document.getElementById('codeContext').value.trim();
+		  const extras = document.getElementById('codeExtras').value.trim();
+		  const out = document.getElementById('codeOutput');
+
+		  if (!goal) {
+			out.value = 'Describe what you want the code to do in the “What should the code do?” field, then click Generate.';
+			autoResizeTextarea(out);
+			return;
+		  }
+
+		  let base = `You are an experienced ${lang || ''} software developer.\n`;
+		  base += `You're tasked to ${taskType.toLowerCase()} for the following goal: ${goal}.`;
+		  if (context) base += `\nCode, errors, environment: ${context}`;
+		  if (lang) base += `\n- Use ${lang} where applicable.`;
+		  if (extras) base += `\n- Special constraints: ${extras}`;
+		  base += `\n- Explain your reasoning step-by-step and comment important parts of the code.`;
+
+		  const enhanced = await aiBoostPrompt(base, 'code', event.currentTarget);
+		  out.value = enhanced;
+		  autoResizeTextarea(out); // Add this line
+		});
+
+        // Help overlay
+        const helpToggle = document.getElementById('helpToggle');
+        const helpClose = document.getElementById('helpClose');
+        const helpBackdrop = document.getElementById('helpBackdrop');
+
+        function closeHelp() {
+            helpBackdrop.classList.remove('active');
+        }
+
+        helpToggle.addEventListener('click', () => helpBackdrop.classList.add('active'));
+        helpClose.addEventListener('click', closeHelp);
+        helpBackdrop.addEventListener('click', e => {
+            if (e.target === helpBackdrop) closeHelp();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeHelp();
+        });
+
+        // Collections functionality
+        const STORAGE_KEY = 'promptCollectionsv1';
+
+        function loadAllCollections() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return {};
+                return JSON.parse(raw);
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveAllCollections(all) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+            } catch (e) {
+                // Ignore
+            }
+        }
+
+        function getTabCollections(tab) {
+            const all = loadAllCollections();
+            return all[tab] || [];
+        }
+
+        function setTabCollections(tab, list) {
+            const all = loadAllCollections();
+            all[tab] = list;
+            saveAllCollections(all);
+        }
+
+        function getOutputFieldForTab(tab) {
+            switch (tab) {
+                case 'text': return document.getElementById('textOutput');
+                case 'image': return document.getElementById('imageOutput');
+                case 'video': return document.getElementById('videoOutput');
+                case 'audio': return document.getElementById('audioOutput');
+                case 'code': return document.getElementById('codeOutput');
+                default: return null;
+            }
+        }
+
+			// Replace renameBtn and delBtn creation with:
+			const renameBtn = document.createElement('button');
+			renameBtn.type = 'button';
+			renameBtn.className = 'collection-small-btn';
+			renameBtn.textContent = 'Rename';
+			renameBtn.onclick = () => openProModal();
+			renameBtn.title = 'Pro feature';
+
+			const delBtn = document.createElement('button');
+			delBtn.type = 'button';
+			delBtn.className = 'collection-small-btn collection-small-btn-danger';
+			delBtn.textContent = 'Delete';
+			delBtn.onclick = () => openProModal();
+			delBtn.title = 'Pro feature';
+
+
+		function collectionsToCsv(list) {
+			const escapeField = (value) => {
+				if (value === null || value === undefined) return '';
+				const str = String(value);
+				if (str.includes('\n') || str.includes(',') || str.includes('"')) {
+					// Properly quote multiline/complex fields
+					return '"' + str.replace(/"/g, '""') + '"';
+				}
+				return str;
+			};
+			
+			const header = 'id,name,type,prompt';
+			const lines = [header];
+			list.forEach(item => {
+				lines.push(`${escapeField(item.id)},${escapeField(item.name)},${escapeField(item.type)},${escapeField(item.prompt)}`);
+			});
+			return lines.join('\n');
+		}
+
+		function parseCSVFull(csvText) {
+			const result = [];
+			let currentRow = [];
+			let currentField = '';
+			let inQuotes = false;
+			let i = 0;
+
+			while (i < csvText.length) {
+				const char = csvText[i];
+				
+				if (char === '"') {
+					// Handle escaped quotes ""
+					if (inQuotes && i + 1 < csvText.length && csvText[i + 1] === '"') {
+						currentField += '"';
+						i++; // Skip next "
+					} else {
+						inQuotes = !inQuotes;
+					}
+				} 
+				else if (char === ',' && !inQuotes) {
+					currentRow.push(currentField);
+					currentField = '';
+				} 
+				else if (char === '\n' && !inQuotes) {
+					currentRow.push(currentField);
+					result.push(currentRow);
+					currentRow = [];
+					currentField = '';
+				} 
+				else {
+					currentField += char;
+				}
+				i++;
+			}
+			
+			// Add final row
+			if (currentField || currentRow.length) {
+				currentRow.push(currentField);
+				result.push(currentRow);
+			}
+			
+			// Clean fields
+			return result.map(row => 
+				row.map(field => {
+					field = field.trim();
+					if (field.startsWith('"') && field.endsWith('"')) {
+						field = field.slice(1, -1);
+					}
+					return field.replace(/""/g, '"');
+				})
+			);
+		}
+
+		function csvToCollections(csvText) {
+			const parsed = parseCSVFull(csvText);
+			if (parsed.length < 2) return [];
+			
+			const items = [];
+			for (let i = 1; i < parsed.length; i++) {
+				const row = parsed[i];
+				if (row.length >= 4) {
+					const [id, name, type, prompt] = row;
+					items.push({
+						id: id?.trim() || `import_${Date.now()}_${i}`,
+						name: name?.trim() || 'Imported',
+						type: type?.trim() || 'text',
+						prompt: prompt || '',
+						createdAt: Date.now(),
+						updatedAt: Date.now()
+					});
+				}
+			}
+			return items;
+		}
+
+		function downloadCsv(filename, csvText) {
+			const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		}
+	});
+
+		function openProModal() {
+		  // Find the Buy Pro button in the auth-bar
+		  const buyProBtn = document.querySelector('.auth-bar a[href*="your-store-product-url"], .auth-bar a[href*="Buy Pro"]');
+		  
+		  if (buyProBtn) {
+			// Focus and highlight the Buy Pro button with gold glow
+			buyProBtn.focus();
+			buyProBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			
+			// Gold glow effect
+			buyProBtn.style.boxShadow = '0 0 25px #FFD700, 0 0 40px #FFA500, inset 0 0 20px rgba(255, 215, 0, 0.3)';
+			buyProBtn.style.borderColor = '#FFD700';
+			buyProBtn.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.15))';
+			buyProBtn.style.transform = 'scale(1.08)';
+			
+			setTimeout(() => {
+			  buyProBtn.style.boxShadow = '';
+			  buyProBtn.style.borderColor = '';
+			  buyProBtn.style.background = '';
+			  buyProBtn.style.transform = '';
+			}, 3000);
+		  } else {
+			// Fallback: gold glow on auth-bar container
+			const authBar = document.querySelector('.auth-bar');
+			if (authBar) {
+			  authBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			  authBar.style.boxShadow = '0 0 20px #FFD700, 0 0 35px #FFA500';
+			  authBar.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.1))';
+			  setTimeout(() => {
+				authBar.style.boxShadow = '';
+				authBar.style.background = '';
+			  }, 3000);
+			}
+		  }
+		}
+
+		// Attach listeners AFTER DOM is loaded
+		document.addEventListener('DOMContentLoaded', () => {
+		});
+
+// Simple demo collections list for Text tab (CSV prompts hardcoded verbatim)
+document.addEventListener('DOMContentLoaded', () => {
+  const textCollections = [
+    {
+      id: 'c1766324015114892bed46a10db8',
+      name: 'Basic optimized text prompt',
+      type: 'text Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`✨ BASIC OPTIMIZED (text):
+
+You are a Email marketer for SaaS productivity tools. You are an expert writer.
+Your task is to write A 5-part email sequence to convert free trial users into paid subscribers for the following audience: People who signed up for a 14-day trial of a productivity app but have not upgraded.
+
+Context/Details: Highlight time-saving features, calendar integration, and team collaboration. Offer a limited-time 20% discount for annual plans in emails 3–5. Avoid spammy language and keep each email under 250 words.
+- Tone of voice: Persuasive and sales-focused.
+- Output format: Short paragraphs with headings.
+- Ask up to 3 clarification questions first if anything is unclear, then produce the final answer.`
+    },
+    {
+      id: 'c17663248708151cc1596a595f78',
+      name: 'OpenAI optimized text prompt 1stPass',
+      type: 'text Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+You are an email marketing specialist focused on SaaS productivity tools, with expertise in persuasive writing. Your objective is to create a compelling 5-part email sequence aimed at converting users who have signed up for a 14-day free trial of a productivity app but have not yet upgraded to a paid subscription.
+
+**Target Audience:** Individuals who have engaged with the app during their trial period but have not made the transition to a paid plan.
+
+**Key Features to Highlight:**
+1. Time-saving capabilities of the app
+2. Calendar integration features
+3. Team collaboration tools
+
+**Promotional Offer:** Include a limited-time offer of a 20% discount on annual plans in emails 3 to 5.
+
+**Guidelines:**
+- Avoid spammy language and maintain a professional tone.
+- Each email should be concise, with a maximum of 250 words.
+- Structure the emails with short paragraphs and clear headings for easy readability.
+
+**Tone of Voice:** Persuasive and sales-focused.
+
+Before you begin, please ask up to 3 clarification questions if any details are unclear, then proceed to generate the email sequence.`
+    },
+    {
+      id: 'c17663249075430020137ed1d1b8',
+      name: 'OpenAI optimized text prompt 2ndPass',
+      type: 'text Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+You are an email marketing expert specializing in SaaS productivity tools, particularly skilled in persuasive writing. Your task is to develop a compelling 5-part email sequence designed to convert users who have signed up for a 14-day free trial of a productivity app but have not yet upgraded to a paid subscription.
+
+**Target Audience:**  
+Individuals who have actively engaged with the app during their trial period but have not yet transitioned to a paid plan.
+
+**Key Features to Emphasize:**  
+1. The app's time-saving capabilities  
+2. Calendar integration features  
+3. Tools that enhance team collaboration  
+
+**Promotional Offer:**  
+In emails 3 to 5, include a limited-time offer of a 20% discount on annual subscription plans.
+
+**Guidelines:**  
+- Maintain a professional tone and avoid spammy language.  
+- Each email should be concise, limited to a maximum of 250 words.  
+- Structure the emails with short paragraphs and clear headings to enhance readability.  
+
+**Tone of Voice:**  
+Persuasive and sales-oriented.
+
+**Instructions:**  
+Before you start crafting the email sequence, please clarify any uncertainties by asking up to 3 questions. Once clarified, proceed to generate the email sequence.`
+    }
+  ];
+
+  const listEl = document.getElementById('textCollectionsList');
+  const output = document.getElementById('textOutput');
+  if (!listEl || !output) return;
+
+  textCollections.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'collection-item';
+
+    const main = document.createElement('div');
+    main.className = 'collection-main';
+
+    const title = document.createElement('div');
+    title.className = 'collection-title';
+    title.textContent = item.name;
+
+    const meta = document.createElement('div');
+    meta.className = 'collection-meta';
+    meta.textContent = `${item.type} • ${item.createdAt}`;
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    const btns = document.createElement('div');
+    btns.className = 'collection-buttons';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.type = 'button';
+    loadBtn.className = 'collection-small-btn';
+    loadBtn.textContent = 'Load';
+    loadBtn.addEventListener('click', () => {
+      output.value = item.prompt;
+	  autoResizeTextarea(output); // Add this line
+    });
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'collection-small-btn';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', openProModal);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'collection-small-btn collection-small-btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', openProModal);
+
+    btns.appendChild(loadBtn);
+    btns.appendChild(renameBtn);
+    btns.appendChild(deleteBtn);
+
+    row.appendChild(main);
+    row.appendChild(btns);
+    listEl.appendChild(row);
+  });
+});
+
+// Simple demo collections list for Image tab (hardcoded prompts)
+document.addEventListener('DOMContentLoaded', () => {
+  const imageCollections = [
+    {
+      id: 'c1766324303759f8bfe16299e6f8',
+      name: 'Basic optimized image prompt',
+      type: 'image Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`✨ BASIC OPTIMIZED (image):
+
+A cozy reading corner beside a large window on a rainy day.
+
+Details:
+- Armchair with a blanket.
+- Small side table with a tea cup and stack of books.
+- Large window showing blurred city lights in the rain.
+- Warm golden light inside, cool blue tones outside.
+- Soft watercolor texture, relaxing and peaceful mood.
+
+Style / usage:
+- Watercolor illustration.
+- Target model: Midjourney.
+- Use case: Print poster.`
+    },
+    {
+      id: 'c17663247586710a645f630d42b8',
+      name: 'OpenAI optimized image prompt 1stPass',
+      type: 'image Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+Create a watercolor illustration of a cozy reading corner beside a large window on a rainy day.
+
+Scene:
+- Comfortable armchair draped with a soft blanket.
+- Small side table with a steaming tea cup and a stack of books.
+- Large window showcasing blurred city lights illuminated by rain.
+- Warm golden light inside the room, contrasted with cool blue tones outside.
+
+Mood:
+- Relaxing and peaceful.
+
+Usage:
+- Perfect for a print poster.
+- Target model: Midjourney.`
+    },
+    {
+      id: 'c1766324805199a389fd69f388e8',
+      name: 'OpenAI optimized image prompt 2ndPass',
+      type: 'image Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+Generate a watercolor illustration depicting a cozy reading corner adjacent to a large window on a rainy day.
+
+Composition:
+1. A plush armchair, comfortably positioned and draped with a soft, inviting blanket.
+2. A small side table beside the armchair, featuring a steaming cup of tea and a neatly stacked collection of books.
+3. A large window that reveals blurred city lights outside, illuminated by the rain, creating a contrast with the warm, golden light glowing from within the room.
+4. The exterior scene should incorporate cool blue tones to enhance the rainy atmosphere.
+
+Ambience:
+- Relaxation and tranquility.
+
+Usage:
+- Suitable for a print poster.
+- Target model: Midjourney.`
+    }
+  ];
+
+  const listEl = document.getElementById('imageCollectionsList');
+  const output = document.getElementById('imageOutput');
+  if (!listEl || !output) return;
+
+  imageCollections.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'collection-item';
+
+    const main = document.createElement('div');
+    main.className = 'collection-main';
+
+    const title = document.createElement('div');
+    title.className = 'collection-title';
+    title.textContent = item.name;
+
+    const meta = document.createElement('div');
+    meta.className = 'collection-meta';
+    meta.textContent = `${item.type} • ${item.createdAt}`;
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    const btns = document.createElement('div');
+    btns.className = 'collection-buttons';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.type = 'button';
+    loadBtn.className = 'collection-small-btn';
+    loadBtn.textContent = 'Load';
+    loadBtn.addEventListener('click', () => {
+      output.value = item.prompt;
+	  autoResizeTextarea(output); // Add this line
+    });
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'collection-small-btn';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', openProModal);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'collection-small-btn collection-small-btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', openProModal);
+
+    btns.appendChild(loadBtn);
+    btns.appendChild(renameBtn);
+    btns.appendChild(deleteBtn);
+
+    row.appendChild(main);
+    row.appendChild(btns);
+    listEl.appendChild(row);
+  });
+});
+
+
+// Simple demo collections list for Video tab (hardcoded prompts)
+document.addEventListener('DOMContentLoaded', () => {
+  const videoCollections = [
+    {
+      id: 'c176620397901311d387cf17f7c8',
+      name: 'Basic optimized video prompt',
+      type: 'video Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`✨ BASIC OPTIMIZED (video):
+
+Create a medium (30–90 seconds) Synthesia avatar video with the following concept:
+AI avatar welcoming new employees to a remote-first company.
+
+Goal of the video:
+- Provide a warm, consistent onboarding message to new hires.
+
+Scenes / camera / audio:
+- Single avatar standing in a modern office background, speaking directly to camera.
+- On-screen bullets appear next to the avatar summarizing key points about:
+  • Company culture
+  • Working hours
+  • Communication tools
+- Friendly voice, neutral accent, clear subtitles.
+- Horizontal 16:9.
+
+Instructions:
+- Break the video into clear scenes and suggest on‑screen text and voiceover.
+- Include aspect ratio and any export notes if relevant.`
+    },
+    {
+      id: 'c1766204116812da73ba5c2d65e8',
+      name: 'OpenAI optimized video prompt 1stPass',
+      type: 'video Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+Create a medium-length (30–90 seconds) video featuring a Synthesia avatar designed to welcome new employees to a remote-first company. The objective is to deliver a warm and consistent onboarding message.
+
+Video structure:
+
+1. Scene setup
+   - Background: Modern office environment, professional yet welcoming.
+   - Avatar positioning: Centered in frame, speaking directly to camera.
+
+2. Content breakdown
+   - Scene 1: Introduction
+     - On‑screen text: "Welcome to [Company Name]!"
+     - Voiceover: Friendly greeting from the avatar.
+   - Scene 2: Company culture
+     - On‑screen text: Key points about company values and culture.
+     - Voiceover: Brief description of the company culture.
+   - Scene 3: Working hours
+     - On‑screen text: "Flexible Working Hours"
+     - Voiceover: Explanation of the remote work schedule.
+   - Scene 4: Communication tools
+     - On‑screen text: "Our Communication Tools"
+     - Voiceover: Overview of tools used for collaboration.
+
+3. Audio / visual elements
+   - Voice: Friendly tone with neutral accent.
+   - Subtitles: Clear and legible for accessibility.
+   - Aspect ratio: Horizontal 16:9.
+
+4. Export notes
+   - Render the final video in high quality, suitable for online sharing.
+
+Provide detailed suggestions for on‑screen text and voiceover for each scene, plus any notes on transitions or visual effects.`
+    },
+    {
+      id: 'c17662041575416c72fb4fa5467',
+      name: 'OpenAI optimized video prompt 2ndPass',
+      type: 'video Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+Create a medium-length (30–90 seconds) video featuring a Synthesia avatar to welcome new employees to a remote-first company. The goal is to provide a warm and consistent onboarding message.
+
+Video structure:
+
+1. Scene setup
+   - Background: Modern office environment conveying professionalism and warmth.
+   - Avatar positioning: Centered, speaking directly to camera.
+
+2. Content breakdown
+   - Scene 1: Introduction
+     - On‑screen text: "Welcome to [Company Name]!"
+     - Voiceover: Avatar introduces themselves and the company.
+   - Scene 2: Company culture
+     - On‑screen text: Values such as "Innovation", "Collaboration", "Inclusivity".
+     - Voiceover: Overview of company culture and why it matters.
+   - Scene 3: Working hours
+     - On‑screen text: "Flexible Working Hours"
+     - Voiceover: Benefits of the remote work schedule.
+   - Scene 4: Communication tools
+     - On‑screen text: "Our Communication Tools"
+     - Voiceover: Overview of tools (e.g., Slack, Zoom, Asana) and their purpose.
+
+3. Audio / visual elements
+   - Voice: Friendly tone, neutral accent.
+   - Subtitles: Clear and legible.
+   - Aspect ratio: Horizontal 16:9.
+
+4. Export notes
+   - High-quality render suitable for online sharing.
+
+Include detailed on‑screen text and voiceover suggestions, plus recommendations for transitions or visual effects.`
+    }
+  ];
+
+  const listEl = document.getElementById('videoCollectionsList');
+  const output = document.getElementById('videoOutput');
+  if (!listEl || !output) return;
+
+  videoCollections.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'collection-item';
+
+    const main = document.createElement('div');
+    main.className = 'collection-main';
+
+    const title = document.createElement('div');
+    title.className = 'collection-title';
+    title.textContent = item.name;
+
+    const meta = document.createElement('div');
+    meta.className = 'collection-meta';
+    meta.textContent = `${item.type} • ${item.createdAt}`;
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    const btns = document.createElement('div');
+    btns.className = 'collection-buttons';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.type = 'button';
+    loadBtn.className = 'collection-small-btn';
+    loadBtn.textContent = 'Load';
+    loadBtn.addEventListener('click', () => {
+      output.value = item.prompt;
+	  autoResizeTextarea(output); // Add this line
+    });
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'collection-small-btn';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', openProModal);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'collection-small-btn collection-small-btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', openProModal);
+
+    btns.appendChild(loadBtn);
+    btns.appendChild(renameBtn);
+    btns.appendChild(deleteBtn);
+
+    row.appendChild(main);
+    row.appendChild(btns);
+    listEl.appendChild(row);
+  });
+});
+
+// Simple demo collections list for Audio tab (hardcoded prompts)
+document.addEventListener('DOMContentLoaded', () => {
+  const audioCollections = [
+    {
+      id: 'c17662034779435f6cf27254ce4',
+      name: 'Basic optimized audio prompt',
+      type: 'audio Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`✨ BASIC OPTIMIZED (audio):
+
+Generate voiceover narration for a meditation app introduction.
+
+Mood / genre:
+- Calm, reassuring narration.
+
+Voice:
+- Soft female voice, neutral accent.
+- Slow pace with long pauses.
+- Warm tone.
+
+Technical:
+- No background music requested in the file.
+- Script length around 2–3 minutes.
+- Audio should be clean with no background noise or breaths.
+
+Extras:
+- Provide multiple variations if appropriate and include a short description for each version.`
+    },
+    {
+      id: 'c176620360129413eef26cb57948',
+      name: 'OpenAI optimized audio prompt 1stPass',
+      type: 'audio Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+Create a voiceover narration for the introduction of a meditation app.
+
+Requirements:
+- Mood: Calm and reassuring.
+- Voice: Soft female voice, neutral accent.
+
+Specifications:
+- Pacing: Slow with long pauses to enhance relaxation.
+- Tone: Warm and inviting.
+- Audio quality: Clean, with no background noise or audible breaths.
+- Length: Approximately 2–3 minutes of script.
+- Background music: None in the audio file.
+
+Additionally:
+- Provide multiple variations of the script if appropriate.
+- Include a brief description for each version highlighting differences in tone or style.`
+    },
+    {
+      id: 'c1766203666502e5b6f55269a61',
+      name: 'OpenAI optimized audio prompt 2ndPass',
+      type: 'audio Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+Generate a voiceover narration for the introduction of a meditation app, ensuring a calm and reassuring atmosphere.
+
+Voice:
+- Soft female voice with a neutral accent.
+
+Specifications:
+- Pacing: Slow tempo with extended pauses to promote relaxation.
+- Tone: Warm and inviting throughout the narration.
+- Audio quality: Clean recording, free from background noise and audible breaths.
+- Length: Approximately 2–3 minutes of script.
+- Background music: Do not include any background music.
+
+Additionally:
+- Create multiple variations of the script, if applicable.
+- Provide a brief description for each version to highlight differences in tone or style.`
+    }
+  ];
+
+  const listEl = document.getElementById('audioCollectionsList');
+  const output = document.getElementById('audioOutput');
+  if (!listEl || !output) return;
+
+  audioCollections.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'collection-item';
+
+    const main = document.createElement('div');
+    main.className = 'collection-main';
+
+    const title = document.createElement('div');
+    title.className = 'collection-title';
+    title.textContent = item.name;
+
+    const meta = document.createElement('div');
+    meta.className = 'collection-meta';
+    meta.textContent = `${item.type} • ${item.createdAt}`;
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    const btns = document.createElement('div');
+    btns.className = 'collection-buttons';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.type = 'button';
+    loadBtn.className = 'collection-small-btn';
+    loadBtn.textContent = 'Load';
+    loadBtn.addEventListener('click', () => {
+      output.value = item.prompt;
+	  autoResizeTextarea(output); // Add this line
+    });
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'collection-small-btn';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', openProModal);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'collection-small-btn collection-small-btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', openProModal);
+
+    btns.appendChild(loadBtn);
+    btns.appendChild(renameBtn);
+    btns.appendChild(deleteBtn);
+
+    row.appendChild(main);
+    row.appendChild(btns);
+    listEl.appendChild(row);
+  });
+});
+
+// Simple demo collections list for Code tab (CSV prompts hardcoded verbatim)
+document.addEventListener('DOMContentLoaded', () => {
+  const codeCollections = [
+    {
+      id: 'c176632449632059d4f5ccfc495',
+      name: 'Basic optimized code prompt',
+      type: 'code Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`✨ BASIC OPTIMIZED (code):
+
+You are an experienced Node.js with Express software developer.
+You're tasked to refactor / clean up code for the following goal: Improve an existing REST API that manages a list of tasks (CRUD operations).
+Code, errors, environment: The current code is in a single file with duplicated logic for error handling. It uses Express and a MongoDB database via Mongoose. I will paste the current server.js file.
+- Use Node.js with Express where applicable.
+- Special constraints: Refactor into smaller functions, move routes and models into separate files, improve error handling, and follow common Express best practices. Add comments where structure changes.
+- Explain your reasoning step-by-step and comment important parts of the code.`
+    },
+    {
+      id: 'c1766324573360a6f6ce0f3b14',
+      name: 'OpenAI optimized code prompt 1stPass',
+      type: 'code Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+You are a skilled Node.js developer with expertise in Express. Your task is to refactor and enhance the existing REST API responsible for managing a list of tasks through CRUD operations. The current implementation is contained within a single file, which leads to duplicated error handling logic. It utilizes Express and connects to a MongoDB database via Mongoose. Below, I will provide the current \`server.js\` file for your reference.
+
+Your objectives are as follows:
+
+1. **Refactor the Code**: Break down the existing code into smaller, more manageable functions to improve readability and maintainability.
+2. **Organize the Structure**: Separate routes and models into distinct files to adhere to best practices in Express application structure.
+3. **Enhance Error Handling**: Implement improved error handling mechanisms to ensure robustness and clarity in error responses.
+4. **Follow Best Practices**: Ensure that the refactored code aligns with common Express best practices for API development.
+5. **Documentation**: Add comments throughout the code to explain your reasoning for structural changes and to highlight important sections.
+
+Please provide a detailed, step-by-step explanation of your refactoring process alongside the updated code.`
+    },
+    {
+      id: 'c17663246178401d146dc46c5378',
+      name: 'OpenAI optimized code prompt 2ndPass',
+      type: 'code Prompt',
+      createdAt: '12/21/2025',
+      prompt:
+`🔥 AI OPTIMIZED (OpenAI):
+
+You are an experienced Node.js developer with a strong background in Express. Your task is to refactor and improve an existing REST API that manages a list of tasks through CRUD operations. The current implementation is located in a single file, which results in duplicated error handling logic. The API uses Express and connects to a MongoDB database via Mongoose. I will provide the current \`server.js\` file for your reference.
+
+Please follow these objectives in your refactoring process:
+
+1. **Code Refactoring**: Decompose the existing code into smaller, well-defined functions to enhance readability and maintainability.
+2. **Project Structure Organization**: Create separate files for routes and models to follow best practices in structuring an Express application.
+3. **Error Handling Improvement**: Introduce robust error handling mechanisms to ensure clear and informative error responses.
+4. **Adherence to Best Practices**: Ensure that the refactored code complies with established best practices for API development in Express.
+5. **Code Documentation**: Include comments throughout the code to clarify your reasoning for the structural changes and to highlight significant sections.
+
+Along with the updated code, please provide a comprehensive, step-by-step explanation of your refactoring process, detailing the changes made and the rationale behind them.`
+    }
+  ];
+
+  const listEl = document.getElementById('codeCollectionsList');
+  const output = document.getElementById('codeOutput');
+  if (!listEl || !output) return;
+
+  codeCollections.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'collection-item';
+
+    const main = document.createElement('div');
+    main.className = 'collection-main';
+
+    const title = document.createElement('div');
+    title.className = 'collection-title';
+    title.textContent = item.name;
+
+    const meta = document.createElement('div');
+    meta.className = 'collection-meta';
+    meta.textContent = `${item.type} • ${item.createdAt}`;
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    const btns = document.createElement('div');
+    btns.className = 'collection-buttons';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.type = 'button';
+    loadBtn.className = 'collection-small-btn';
+    loadBtn.textContent = 'Load';
+    loadBtn.addEventListener('click', () => {
+      output.value = item.prompt;
+	  autoResizeTextarea(output); // Add this line
+    });
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'collection-small-btn';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', openProModal);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'collection-small-btn collection-small-btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', openProModal);
+
+    btns.appendChild(loadBtn);
+    btns.appendChild(renameBtn);
+    btns.appendChild(deleteBtn);
+
+    row.appendChild(main);
+    row.appendChild(btns);
+    listEl.appendChild(row);
+  });
+});
+
+<!-- Refresh -->
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('pwaReloadBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    console.log('Refresh button clicked'); // debug
+
+    if ('serviceWorker' in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          console.log('Requesting SW update...');
+          await reg.update();
+        }
+      } catch (e) {
+        console.warn('SW update failed', e);
+      }
+    }
+
+    window.location.reload();
+  });
+});
+	</script>
+<script>
+  (function () {
+    const btn = document.getElementById('fontSizeFloating');
+    const label = document.getElementById('fontSizeLabel');
+
+    if (!btn || !label) return;
+
+    const NORMAL_SIZE = '16px';   // adjust if your base size is different
+    const LARGE_SIZE  = '19px';   // ~20% larger
+    let enlarged = false;
+
+    function applyFontSize() {
+      document.documentElement.style.fontSize = enlarged ? LARGE_SIZE : NORMAL_SIZE;
+      label.textContent = enlarged ? 'a' : 'A';
+      btn.setAttribute(
+        'aria-label',
+        enlarged ? 'Switch to normal text size' : 'Switch to larger text size'
+      );
+    }
+
+    btn.addEventListener('click', function () {
+      enlarged = !enlarged;       // loop: normal -> large -> normal
+      applyFontSize();
+    });
+
+    // Optional: respect user’s previous choice for this browser
+    const saved = localStorage.getItem('promptness-font-size');
+    if (saved === 'large') enlarged = true;
+
+    applyFontSize();
+
+    // Save changes
+    const originalHandler = btn.onclick;
+    btn.addEventListener('click', function () {
+      localStorage.setItem('promptness-font-size', enlarged ? 'large' : 'normal');
+      if (typeof originalHandler === 'function') originalHandler();
+    });
+  })();
+</script>
+</body>
+</html>
